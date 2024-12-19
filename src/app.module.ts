@@ -5,10 +5,12 @@ import { ServiceConfig } from './config/service.config';
 import { PatientController } from './patient.controller';
 import { PatientService } from './patient.service';
 import { Patient, PatientSchema } from './schemas/patient.schema';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/healthsync'),
+    ConfigModule.forRoot(),
+    MongooseModule.forRoot(process.env.MONGODB_URI),
     MongooseModule.forFeature([{ name: Patient.name, schema: PatientSchema }]),
     ClientsModule.register([
       {
