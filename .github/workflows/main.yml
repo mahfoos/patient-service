@@ -3,8 +3,6 @@ name: Patient Service CI/CD
 on:
   push:
     branches: [main]
-    paths:
-      - '**'
   workflow_dispatch:
 
 env:
@@ -34,7 +32,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          cd patient-service
+          # Remove cd command since we're already in the correct directory
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
