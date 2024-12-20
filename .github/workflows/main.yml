@@ -54,17 +54,21 @@ jobs:
 
       - name: Update Deployment Manifest
         run: |
-          echo "Updating deployment manifest with the new image..."
+          if [ -z "$IMAGE_TAG" ]; then
+            echo "ERROR: IMAGE_TAG is empty. Check previous steps."
+            exit 1
+          fi
           sed -i "s|image:.*|image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG|" k8s/deployment.yaml
 
-      - name: Output Deployment YAML
+      - name: Debug Deployment YAML
         run: cat k8s/deployment.yaml
 
-      - name: Deploy to EKS
+      - name: Validate Deployment YAML
+        run: kubectl apply -f k8s/deployment.yaml --dry-run=client
+
+      - name: Apply Kubernetes Manifests
         run: |
           echo "Applying Kubernetes manifests..."
           kubectl apply -f k8s/service.yaml
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/ingress.yaml
-
-          echo "Deployment complete!"
