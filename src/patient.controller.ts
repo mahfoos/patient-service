@@ -1,65 +1,78 @@
-import { Controller } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { PatientService } from './patient.service';
 import { CreatePatientDto } from './dto/create-patient.dto';
 import { UpdatePatientDto } from './dto/update-patient.dto';
 import { AddMedicalRecordDto } from './dto/add-medical-record.dto';
 
-@Controller()
+// Set the base path for this controller to "patients"
+@Controller('patients')
 export class PatientController {
   constructor(private readonly patientService: PatientService) {}
 
-  @MessagePattern({ cmd: 'createPatient' })
-  create(@Payload() createPatientDto: CreatePatientDto) {
+  @Post()
+  create(@Body() createPatientDto: CreatePatientDto) {
     return this.patientService.create(createPatientDto);
   }
 
-  @MessagePattern({ cmd: 'findAllPatients' })
+  @Get()
   findAll() {
     return this.patientService.findAll();
   }
 
-  @MessagePattern({ cmd: 'findOnePatient' })
-  findOne(@Payload() id: string) {
+  @Get(':id')
+  findOne(@Param('id') id: string) {
     return this.patientService.findOne(id);
   }
 
-  @MessagePattern({ cmd: 'updatePatient' })
-  update(@Payload() data: { id: string; updatePatientDto: UpdatePatientDto }) {
-    return this.patientService.update(data.id, data.updatePatientDto);
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updatePatientDto: UpdatePatientDto) {
+    return this.patientService.update(id, updatePatientDto);
   }
 
-  @MessagePattern({ cmd: 'removePatient' })
-  remove(@Payload() id: string) {
+  @Delete(':id')
+  remove(@Param('id') id: string) {
     return this.patientService.remove(id);
   }
 
-  @MessagePattern({ cmd: 'addMedicalRecord' })
+  @Post(':id/medical-records')
   addMedicalRecord(
-    @Payload() data: { id: string; record: AddMedicalRecordDto },
+    @Param('id') id: string,
+    @Body() record: AddMedicalRecordDto,
   ) {
-    return this.patientService.addMedicalRecord(data.id, data.record);
+    return this.patientService.addMedicalRecord(id, record);
   }
 
-  @MessagePattern({ cmd: 'addPrescription' })
-  addPrescription(@Payload() data: { id: string; prescription: any }) {
-    return this.patientService.addPrescription(data.id, data.prescription);
+  @Post(':id/prescriptions')
+  addPrescription(@Param('id') id: string, @Body() prescription: any) {
+    return this.patientService.addPrescription(id, prescription);
   }
 
-  @MessagePattern({ cmd: 'addLabResult' })
-  addLabResult(@Payload() data: { id: string; labResult: any }) {
-    return this.patientService.addLabResult(data.id, data.labResult);
+  @Post(':id/lab-results')
+  addLabResult(@Param('id') id: string, @Body() labResult: any) {
+    return this.patientService.addLabResult(id, labResult);
   }
 
-  @MessagePattern({ cmd: 'updateAllergies' })
-  updateAllergies(@Payload() data: { id: string; allergies: string[] }) {
-    return this.patientService.updateAllergies(data.id, data.allergies);
+  @Patch(':id/allergies')
+  updateAllergies(
+    @Param('id') id: string,
+    @Body() body: { allergies: string[] },
+  ) {
+    return this.patientService.updateAllergies(id, body.allergies);
   }
 
-  @MessagePattern({ cmd: 'updateInsurance' })
+  @Patch(':id/insurance')
   updateInsurance(
-    @Payload() data: { id: string; insurance: Record<string, string> },
+    @Param('id') id: string,
+    @Body() insurance: Record<string, string>,
   ) {
-    return this.patientService.updateInsurance(data.id, data.insurance);
+    return this.patientService.updateInsurance(id, insurance);
   }
 }
