@@ -6,6 +6,7 @@ spec:
   selector:
     app: patient-service
   ports:
-    - port: 80
+    - protocol: TCP
+      port: 80
       targetPort: 3001
-  type: ClusterIP
+  type: LoadBalancer
