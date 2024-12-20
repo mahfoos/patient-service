@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: patient-service
-          image: PLACEHOLDER
+          image: 861569119044.dkr.ecr.us-east-1.amazonaws.com/healthsync-patient-service:latest
           ports:
             - containerPort: 3001
           env:
