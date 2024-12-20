@@ -50,12 +50,6 @@ jobs:
           echo "Updating kubeconfig for EKS cluster..."
           aws eks update-kubeconfig --name healthsync-cluster --region ${{ env.AWS_REGION }}
 
-      - name: Debug Variables
-        run: |
-          echo "ECR_REGISTRY=$ECR_REGISTRY"
-          echo "ECR_REPOSITORY=$ECR_REPOSITORY"
-          echo "IMAGE_TAG=$IMAGE_TAG"
-
       - name: Update Deployment Manifest
         run: |
           if [ -z "$IMAGE_TAG" ]; then
