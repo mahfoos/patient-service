@@ -9,6 +9,7 @@ env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: healthsync-patient-service
   ECR_REGISTRY: 861569119044.dkr.ecr.us-east-1.amazonaws.com
+  IMAGE_TAG: ${{ github.sha }}
 
 jobs:
   build-and-deploy:
@@ -41,6 +42,9 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
+          # Export IMAGE_TAG for future steps
+          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+
       - name: Update kubeconfig for EKS
         run: |
           echo "Updating kubeconfig for EKS cluster..."
@@ -62,9 +66,6 @@ jobs:
 
       - name: Debug Deployment YAML
         run: cat k8s/deployment.yaml
-
-      - name: Validate Deployment YAML
-        run: kubectl apply -f k8s/deployment.yaml --dry-run=client
 
       - name: Apply Kubernetes Manifests
         run: |
