@@ -8,6 +8,7 @@ on:
 env:
   AWS_REGION: us-east-1
   ECR_REPOSITORY: healthsync-patient-service
+  ECR_REGISTRY: 861569119044.dkr.ecr.us-east-1.amazonaws.com
 
 jobs:
   build-and-deploy:
@@ -44,6 +45,15 @@ jobs:
         run: |
           echo "Updating kubeconfig for EKS cluster..."
           aws eks update-kubeconfig --name healthsync-cluster --region ${{ env.AWS_REGION }}
+
+      - name: Create or Update ECR Pull Secret
+        run: |
+          echo "Creating or updating ECR image pull secret..."
+          kubectl create secret docker-registry ecr-secret \
+              --docker-server=${{ env.ECR_REGISTRY }} \
+              --docker-username=AWS \
+              --docker-password=$(aws ecr get-login-password --region ${{ env.AWS_REGION }}) \
+              --namespace default || echo "ECR secret already exists"
 
       - name: Deploy to EKS
         run: |
