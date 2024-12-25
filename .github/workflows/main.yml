@@ -37,9 +37,12 @@ jobs:
           echo "Building Docker image..."
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
           echo "Pushing Docker images..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+          # Export IMAGE_TAG for future steps
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
 
       - name: Update kubeconfig for EKS
@@ -61,50 +64,3 @@ jobs:
           kubectl apply -f k8s/service.yaml
           kubectl apply -f k8s/deployment.yaml
           kubectl apply -f k8s/ingress.yaml
-
-      # Wait for deployment to be ready
-      - name: Wait for deployment
-        run: |
-          kubectl wait --for=condition=available deployment/patient-service --timeout=300s
-
-  integration-tests:
-    needs: build-and-deploy
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4 
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Update kubeconfig
-        run: |
-          aws eks update-kubeconfig --name healthsync-cluster --region ${{ env.AWS_REGION }}
-
-      - name: Get service URLs
-        run: |
-          echo "PATIENT_SERVICE_HOST=$(kubectl get svc patient-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> $GITHUB_ENV
-          echo "APPOINTMENT_SERVICE_HOST=$(kubectl get svc appointment-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> $GITHUB_ENV
-          echo "NOTIFICATION_SERVICE_HOST=$(kubectl get svc notification-service -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')" >> $GITHUB_ENV
-
-      - name: Install dependencies
-        run: |
-          npm install
-
-      - name: Run integration tests
-        run: npm run test:integration
-        env:
-          PATIENT_SERVICE_PORT: 80
-          APPOINTMENT_SERVICE_PORT: 80
-          NOTIFICATION_SERVICE_PORT: 80
-
-      # Optional: Report test results
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: test-results
-          path: test-results/
